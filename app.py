@@ -13,15 +13,19 @@ output_name = session.get_outputs()[0].name
 # Class labels
 labels = ['MildDemented', 'ModerateDemented', 'NonDemented', 'VeryMildDemented']
 
+def softmax(x):
+    """Apply softmax to convert logits to probabilities"""
+    exp_x = np.exp(x - np.max(x))  # Subtract max for numerical stability
+    return exp_x / np.sum(exp_x)
+
 # ------------------------------
 # STREAMLIT UI SETUP
 # ------------------------------
 st.set_page_config(
     page_title="Alzheimer's Stage Classifier",
-    page_icon="🧠",
     layout="centered"
 )
-st.title("🧠 Alzheimer's Stage Classifier")
+st.title(" Alzheimer's Stage Classifier")
 st.write("Upload a brain MRI image to predict the Alzheimer's stage.")
 
 uploaded_file = st.file_uploader("Choose an image...", type=["jpg", "jpeg", "png"])
@@ -52,18 +56,25 @@ if uploaded_file is not None:
         # RUN INFERENCE
         # ------------------------------
         pred = session.run([output_name], {input_name: img_array})[0]
-        predicted_class = labels[np.argmax(pred)]
-        confidence = np.max(pred) * 100
+        
+        # Apply softmax to convert logits to probabilities
+        probabilities = softmax(pred[0])
+        
+        predicted_class = labels[np.argmax(probabilities)]
+        confidence = np.max(probabilities) * 100
 
         # ------------------------------
         # DISPLAY RESULTS
         # ------------------------------
-        st.success(f"✅ Prediction: {predicted_class} ({confidence:.2f}%)")
+        st.success(f" Prediction: {predicted_class} ({confidence:.2f}%)")
 
         st.subheader("Class Probabilities:")
-        for label, p in zip(labels, pred[0]):
-            st.write(f"{label}: {p*100:.2f}%")
-            st.progress(int(p*100))  # Convert float32 -> int 0-100 for progress bar
+        for label, p in zip(labels, probabilities):
+            percentage = p * 100
+            st.write(f"{label}: {percentage:.2f}%")
+            # Ensure progress bar value is between 0-100
+            progress_value = max(0, min(100, int(percentage)))
+            st.progress(progress_value)
 
     except Exception as e:
-        st.error(f"❌ Inference failed: {e}")
+        st.error(f" Inference failed: {e}")
