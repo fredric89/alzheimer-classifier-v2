@@ -4,7 +4,7 @@ from PIL import Image
 import numpy as np
 
 # Load ONNX model
-session = ort.InferenceSession("model.onnx")
+session = ort.InferenceSession("mobilenetv2_model.onnx")
 
 # Class labels (adjust if different)
 labels = ['MildDemented', 'ModerateDemented', 'NonDemented', 'VeryMildDemented']
