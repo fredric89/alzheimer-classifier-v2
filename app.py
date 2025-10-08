@@ -1,54 +1,42 @@
-import os
-import numpy as np
-from flask import Flask, render_template, request
-from PIL import Image
+import streamlit as st
 import onnxruntime as ort
-
-app = Flask(__name__)
+from PIL import Image
+import numpy as np
 
 # Load ONNX model
-session = ort.InferenceSession("model.onnx", providers=['CPUExecutionProvider'])
+session = ort.InferenceSession("model.onnx")
 
-LABELS = ['MildDemented', 'ModerateDemented', 'NonDemented', 'VeryMildDemented']
+# Class labels (adjust if different)
+labels = ['MildDemented', 'ModerateDemented', 'NonDemented', 'VeryMildDemented']
 
-def preprocess_image(image):
-    image = image.resize((224, 224))
-    image = np.array(image).astype(np.float32) / 255.0
-    if len(image.shape) == 2:
-        image = np.expand_dims(image, axis=-1)
-        image = np.repeat(image, 3, axis=-1)
-    image = np.transpose(image, (2, 0, 1))
-    image = np.expand_dims(image, axis=0)
-    return image
+# Title
+st.title("🧠 Alzheimer’s Stage Classifier")
 
-@app.route('/')
-def index():
-    return render_template('index.html')
+# File uploader
+uploaded_file = st.file_uploader("Upload a brain MRI image", type=["jpg", "jpeg", "png"])
 
-@app.route('/predict', methods=['POST'])
-def predict():
-    if 'image' not in request.files:
-        return render_template('index.html', prediction="No file uploaded")
-    file = request.files['image']
-    if file.filename == '':
-        return render_template('index.html', prediction="No selected file")
+if uploaded_file is not None:
+    # Show uploaded image
+    image = Image.open(uploaded_file)
+    st.image(image, caption="Uploaded Image", use_column_width=True)
 
-    image = Image.open(file).convert('RGB')
-    input_data = preprocess_image(image)
+    # Preprocess image (example — adjust to match your model’s training)
+    img = image.resize((128, 128))       # Example size — change if needed
+    img_array = np.array(img) / 255.0    # Normalize
+    img_array = np.expand_dims(img_array, axis=0).astype(np.float32)
+
+    # Run inference
     input_name = session.get_inputs()[0].name
-    outputs = session.run(None, {input_name: input_data})
-    probs = outputs[0][0]
+    output_name = session.get_outputs()[0].name
+    pred = session.run([output_name], {input_name: img_array})[0]
 
-    exp_probs = np.exp(probs - np.max(probs))
-    softmax = exp_probs / np.sum(exp_probs)
+    # Get prediction
+    predicted_class = labels[np.argmax(pred)]
+    confidence = np.max(pred) * 100
 
-    pred_idx = np.argmax(softmax)
-    prediction = LABELS[pred_idx]
-    confidence = float(softmax[pred_idx]) * 100
+    st.success(f"✅ Prediction: {predicted_class} ({confidence:.2f}%)")
 
-    all_probs = {LABELS[i]: float(softmax[i]) * 100 for i in range(len(LABELS))}
-
-    return render_template('index.html', prediction=f"{prediction} — {confidence:.2f}%", probs=all_probs)
-
-if __name__ == "__main__":
-    app.run()
+    # Show confidence per class
+    st.subheader("Class probabilities:")
+    for label, p in zip(labels, pred[0]):
+        st.write(f"{label}: {p*100:.2f}%")
