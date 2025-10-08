@@ -6,7 +6,7 @@ import numpy as np
 # ------------------------------
 # LOAD ONNX MODEL
 # ------------------------------
-session = ort.InferenceSession("model.onnx")
+session = ort.InferenceSession("mobilenetv2_model.onnx")
 input_name = session.get_inputs()[0].name
 output_name = session.get_outputs()[0].name
 
