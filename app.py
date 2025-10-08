@@ -38,11 +38,11 @@ if uploaded_file is not None:
         img = image.convert("RGB")  # Ensure 3 channels
         img = img.resize((224, 224))  # Resize to model input size
 
-        # Convert to numpy array and normalize same as training
+        # Convert to numpy array and normalize like training
         img_array = np.array(img).astype(np.float32) / 255.0
         img_array = (img_array - 0.5) / 0.5  # Normalize
 
-        # Transpose to [C, H, W] and add batch dimension [1, 3, 224, 224]
+        # Transpose to [C,H,W] and add batch dimension [1,3,224,224]
         img_array = np.transpose(img_array, (2, 0, 1))
         img_array = np.expand_dims(img_array, axis=0).astype(np.float32)
 
@@ -63,7 +63,7 @@ if uploaded_file is not None:
         st.subheader("Class Probabilities:")
         for label, p in zip(labels, pred[0]):
             st.write(f"{label}: {p*100:.2f}%")
-            st.progress(p)  # Optional: visual progress bar for each class
+            st.progress(int(p*100))  # Convert float32 -> int 0-100 for progress bar
 
     except Exception as e:
         st.error(f"❌ Inference failed: {e}")
