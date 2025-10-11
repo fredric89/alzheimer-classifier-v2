@@ -25,7 +25,7 @@ st.set_page_config(
     page_title="Alzheimer's Stage Classifier with MobilenetV2",
     layout="centered"
 )
-st.title(" Alzheimer's Stage Classifier")
+st.title(" Alzheimer's Stage Classifier using MobilenetV2 model")
 st.write("Upload a brain MRI image to predict the Alzheimer's stage.")
 
 uploaded_file = st.file_uploader("Choose an image...", type=["jpg", "jpeg", "png"])
