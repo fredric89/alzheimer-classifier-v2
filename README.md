@@ -1,1 +1,1 @@
-# alzheimer-classifier-v2
+# alzheimer-classifier-mobilenetv2
