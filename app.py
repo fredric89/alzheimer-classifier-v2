@@ -22,7 +22,7 @@ def softmax(x):
 # STREAMLIT UI SETUP
 # ------------------------------
 st.set_page_config(
-    page_title="Alzheimer's Stage Classifier",
+    page_title="Alzheimer's Stage Classifier with MobilenetV2",
     layout="centered"
 )
 st.title(" Alzheimer's Stage Classifier")
